@@ -12,7 +12,7 @@ The [Next.js](https://nextjs.org/) project was bootstrapped with [`create-next-a
 
 - **app/[[...slug]]/page.tsx**: optional catch-all host page with layout, head and error handling 
 - **conf**: defines supported feature apps and their mapping plus the demo page CF id fallback
-- **feature-apps**: feature app components (react server components)
+- **feature-apps**: feature app components (react server components) including ParallaxTeaser and SequenceScroll
 - **utils**: utility functions to query and resolve content fragments     
 
 ## Env & Auth
