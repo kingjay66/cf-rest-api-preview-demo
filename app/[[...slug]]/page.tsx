@@ -26,19 +26,19 @@ async function Page({ params }: PageParams) {
     }
 
     featureApps = Object.keys(contentFragment.elements)
-        .map((contentFragmentTitle) => {
-          const modelPath = contentFragment.elements[contentFragmentTitle].model.path;
-          const featureApp = findFeatureApp(modelPath);
+      .map((contentFragmentTitle) => {
+        const modelPath = contentFragment.elements[contentFragmentTitle].model.path;
+        const featureApp = findFeatureApp(modelPath);
 
-          if (featureApp) {
-            // Set content fragment id
-            featureApp.contentFragmentId = contentFragment.elements[contentFragmentTitle].id;
-            return featureApp;
-          }
+        if (featureApp) {
+          // Set content fragment id
+          featureApp.contentFragmentId = contentFragment.elements[contentFragmentTitle].id;
+          return featureApp;
+        }
 
-          return null;
-        })
-        .filter((featureApp) => featureApp !== null) as Array<FeatureApp>;
+        return null;
+      })
+      .filter((featureApp) => featureApp !== null) as Array<FeatureApp>;
   }
   // Load single feature app
   else if (path.startsWith('/feature-app/')) {
@@ -56,8 +56,7 @@ async function Page({ params }: PageParams) {
       featureApp.contentFragment = contentFragment;
       featureApps.push(featureApp);
     }
-  }
-  else {
+  } else {
     notFound();
   }
 
