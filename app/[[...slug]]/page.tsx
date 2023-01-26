@@ -16,9 +16,33 @@ async function Page({ params }: PageParams) {
     path = `/${params?.slug.join('/')}`;
   }
 
-  // Retrieve single feature app for preview
-  if (path.startsWith('/preview/')) {
-    const contentFragmentId = path.replace('/preview', '');
+  // Retrieve all feature apps for preview
+  if (path.startsWith('/page/')) {
+    const contentFragmentId = path.replace('/page/', '');
+    const contentFragment = await getContentFragment(contentFragmentId);
+
+    if (!contentFragment) {
+      return notFound();
+    }
+
+    featureApps = Object.keys(contentFragment.elements)
+        .map((contentFragmentTitle) => {
+          const modelPath = contentFragment.elements[contentFragmentTitle].model.path;
+          const featureApp = findFeatureApp(modelPath);
+
+          if (featureApp) {
+            // Set content fragment id
+            featureApp.contentFragmentId = contentFragment.elements[contentFragmentTitle].id;
+            return featureApp;
+          }
+
+          return null;
+        })
+        .filter((featureApp) => featureApp !== null) as Array<FeatureApp>;
+  }
+  // Load single feature app
+  else if (path.startsWith('/feature-app/')) {
+    const contentFragmentId = path.replace('/feature-app/', '');
     // Resolve content fragment to get the model path
     const contentFragment = await getContentFragment(contentFragmentId);
     if (!contentFragment) {
@@ -33,28 +57,8 @@ async function Page({ params }: PageParams) {
       featureApps.push(featureApp);
     }
   }
-  // Load page feature apps
   else {
-    const contentFragment = await getContentFragment(path || conf.pageId);
-
-    if (!contentFragment) {
-      return notFound();
-    }
-
-    featureApps = Object.keys(contentFragment.elements)
-      .map((contentFragmentTitle) => {
-        const modelPath = contentFragment.elements[contentFragmentTitle].model.path;
-        const featureApp = findFeatureApp(modelPath);
-
-        if (featureApp) {
-          // Set content fragment id
-          featureApp.contentFragmentId = contentFragment.elements[contentFragmentTitle].id;
-          return featureApp;
-        }
-
-        return null;
-      })
-      .filter((featureApp) => featureApp !== null) as Array<FeatureApp>;
+    notFound();
   }
 
   return (

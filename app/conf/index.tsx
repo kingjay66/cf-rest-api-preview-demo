@@ -1,6 +1,4 @@
 const conf = {
-  // Default loaded example page by CF id
-  pageId: 'd6ca53d5-c11b-4d66-a270-fd43c9aee899',
   // Mapping of feature apps model and component
   featureApps: [
     {
