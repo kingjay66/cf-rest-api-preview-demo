@@ -1,36 +1,11 @@
 import styles from './page.module.css'
 import {lazy, Suspense} from 'react';
 import { notFound } from 'next/navigation';
-import SequenceScroll from '../feature-apps/SequenceScroll'
+import {getContentFragment, findFeatureApp} from '@/app/utils';
+import conf from '@/app/conf';
 
 type PageParams = {
   params: {slug?: [string]}
-}
-
-async function getPageContentFragments(contentFragmentPath: string) {
-  const req = await fetch(`https://${process.env.AEM_HOST}/adobe/cf/fragments?path=${contentFragmentPath}`, {
-    cache: 'no-store',
-    headers: {
-      authorization: `Bearer ${process.env.AEM_TOKEN}`,
-      'X-Adobe-Accept-Unsupported-API': '1'
-    }
-  });
-
-  if (!req.ok) {
-    // https://beta.nextjs.org/docs/routing/error-handling
-    throw new Error(`"${contentFragmentPath}" not found`);
-  }
-
-  // return await req.json();
-  const {data} = await req.json();
-
-  const paths = data[0]?.elements;
-
-  return paths ? Object.values(paths) : [];
-}
-
-const findFeatureApp = (requestedPath: string) => {
-  return process.env.conf.featureApps.find(featureApp => featureApp.path === requestedPath)
 }
 
 async function Page({params}: PageParams) {
@@ -43,26 +18,54 @@ async function Page({params}: PageParams) {
 
   // Retrieve single feature app for preview
   if (path.startsWith('/preview/')) {
-    const featureApp = findFeatureApp(path.replace('/preview', ''));
+    const contentFragmentId = path.replace('/preview', '');
+    // Resolve content fragment to get the model path
+    const contentFragment = await getContentFragment(contentFragmentId);
+    if (!contentFragment) {
+      notFound();
+    }
+
+    const featureApp = findFeatureApp(contentFragment.model.path);
+
     if (featureApp) {
+      // Set content fragment
+      featureApp.contentFragment = contentFragment;
       featureApps.push(featureApp);
     }
   }
   // Load page feature apps
   else {
-    const pageContentFragments = await getPageContentFragments(path || process.env.conf.pagePath);
+    const contentFragment = await getContentFragment(path || conf.pageId);
 
-    featureApps = pageContentFragments
-        .map(featureAppPath => findFeatureApp(featureAppPath))
-        .filter(featureApp => featureApp !== null)
+    if (!contentFragment) {
+      return notFound();
+    }
+
+    featureApps = Object.keys(contentFragment.elements)
+        .map((contentFragmentTitle) => {
+          const modelPath = contentFragment.elements[contentFragmentTitle].model.path;
+          const featureApp = findFeatureApp(modelPath);
+
+          if (featureApp) {
+            // Set content fragment id
+            featureApp.contentFragmentId = contentFragment.elements[contentFragmentTitle].id;
+            return featureApp;
+          }
+
+          return null;
+        })
+        .filter(featureApp => featureApp !== null) as Array<FeatureApp>
   }
 
   return (
     <main className={styles.main}>
       <Suspense>
         {featureApps.map((featureApp, index) => {
-          const Element = lazy(() => import(`../feature-apps/${featureApp.component}/index`));
-          return <Element key={index} contentFragmentPath={featureApp.path}/>
+          // Render as you fetch
+          // Dynamically and lazy load React Server components mapped to found feature app
+          // Components without resolved content fragments will fetch content fragment data and stream UI to client
+          const Element = lazy(() => import(`@/app/feature-apps/${featureApp.component}/index`));
+          return <Element key={index} featureApp={featureApp}/>
         })}
       </Suspense>
     </main>

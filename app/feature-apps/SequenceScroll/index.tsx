@@ -1,3 +1,5 @@
+import {getBase64Image, getFeatureAppContentFragment} from '@/app/utils';
+
 type SequenceScrollImage = {
     src: string;
     alt: string;
@@ -8,37 +10,25 @@ type SequenceScrollContent = {
     legal: string;
 }
 
-async function getContent(contentFragmentPath: string) {
-    const req = await fetch(`https://${process.env.AEM_HOST}/adobe/cf/fragments?path=${contentFragmentPath}`, {
-        cache: 'no-store',
-        headers: {
-            authorization: `Bearer ${process.env.AEM_TOKEN}`,
-            'X-Adobe-Accept-Unsupported-API': '1'
-        }
-    });
-
-    if (!req.ok) {
-        // https://beta.nextjs.org/docs/routing/error-handling
-        throw new Error(`"${contentFragmentPath}" not found`);
-    }
-
-    const res = await req.json();
-    console.log(JSON.stringify(res, null, 4));
-    const {data} = res;
-    const content = data[0].elements;
+async function getContent(contentFragment: ContentFragment) {
+    const {elements} = contentFragment;
 
     return {
         image: {
-            // src: 'https://pre-www.audi.com/content/dam/e-tron-gt/scroll/Q5_Landscape001.jpg?imwidth=1024',
-            src: `https://${process.env.AEM_HOST}${content.image}` ,
-            alt: content.alternateText
+            src: await getBase64Image(elements.image),
+            alt: elements.alternateText
         },
-        legal: content.emissionAndConsumptionDataOptional
+        legal: elements.emissionAndConsumptionDataOptional
     } as SequenceScrollContent;
 }
 
-async function SequenceScroll({contentFragmentPath}: {contentFragmentPath: string}) {
-    const {image, legal } = await getContent(contentFragmentPath);
+async function SequenceScroll({featureApp}: {featureApp: FeatureApp}) {
+    const contentFragment = await getFeatureAppContentFragment(featureApp);
+    if (!contentFragment) {
+        return null;
+    }
+
+    const {image, legal } = await getContent(contentFragment);
 
     return (
         <div style={{

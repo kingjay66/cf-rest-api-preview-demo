@@ -1,3 +1,5 @@
+import {getBase64Image, getFeatureAppContentFragment} from '@/app/utils';
+
 type ParallaxTeaserLink = {
     label: string;
     href: string;
@@ -16,49 +18,38 @@ type ParallaxTeaserContent = {
     legal: string;
 }
 
-async function getContent(contentFragmentPath: string) {
-    const req = await fetch(`https://${process.env.AEM_HOST}/adobe/cf/fragments?path=${contentFragmentPath}`, {
-        cache: 'no-store',
-        headers: {
-            authorization: `Bearer ${process.env.AEM_TOKEN}`,
-            'X-Adobe-Accept-Unsupported-API': '1'
-        }
-    });
-
-    if (!req.ok) {
-        // https://beta.nextjs.org/docs/routing/error-handling
-        throw new Error(`"${contentFragmentPath}" not found`);
-    }
-
-    const res = await req.json();
-    console.log(JSON.stringify(res, null, 4));
-    const {data} = res;
-    const content = data[0].elements;
+async function getContent(contentFragment: ContentFragment) {
+    const {elements} = contentFragment;
 
     return {
-        headline: content.headline,
-        description: content.copyText.value,
+        headline: elements.headline,
+        description: elements.copyText.value,
         image: {
-            // src: 'https://pre-www.audi.de/content/dam/s2/angrybirds/parallax-teaser/picture01-M.jpg?imwidth=1439',
-            src: `https://${process.env.AEM_HOST}${content.fieldLabel}`,
+            src: await getBase64Image(elements.fieldLabel),
             alt: ''
         },
+        // TODO Use references for links ?
         links: [
             {
-                href: content.cta1Url,
-                label: content.cta1Label
+                href: elements.cta1Url,
+                label: elements.cta1Label
             },
             {
-                href: content.cta2Url,
-                label: content.cta2Label
+                href: elements.cta2Url,
+                label: elements.cta2Label
             }
         ],
-        legal: content.emissionAndConsumptionDataOptional
+        legal: elements.emissionAndConsumptionDataOptional
     } as ParallaxTeaserContent;
 }
 
-async function ParallaxTeaser({contentFragmentPath} : {contentFragmentPath: string}) {
-    const {headline, description, image, links, legal} = await getContent(contentFragmentPath);
+async function ParallaxTeaser({featureApp}: {featureApp: FeatureApp}) {
+    const contentFragment = await getFeatureAppContentFragment(featureApp);
+    if (!contentFragment) {
+        return null;
+    }
+
+    const {headline, description, image, links, legal} = await getContent(contentFragment);
 
     return (
         <div style={{
@@ -117,7 +108,7 @@ async function ParallaxTeaser({contentFragmentPath} : {contentFragmentPath: stri
                                 fontSize: '18px',
                                 textDecoration: 'none',
                                 color: 'inherit'
-                            }} href={link.href}>{link.label} ></a>
+                            }} href={link.href}>{link.label}</a>
                         </li>
                     ))}
                 </ul>
