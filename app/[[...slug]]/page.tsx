@@ -1,14 +1,14 @@
-import styles from './page.module.css'
-import {lazy, Suspense} from 'react';
+import styles from './page.module.css';
+import { lazy, Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import {getContentFragment, findFeatureApp} from '@/app/utils';
+import { getContentFragment, findFeatureApp } from '@/app/utils';
 import conf from '@/app/conf';
 
 type PageParams = {
-  params: {slug?: [string]}
-}
+  params: { slug?: [string] };
+};
 
-async function Page({params}: PageParams) {
+async function Page({ params }: PageParams) {
   let path = '';
   let featureApps = [];
 
@@ -42,19 +42,19 @@ async function Page({params}: PageParams) {
     }
 
     featureApps = Object.keys(contentFragment.elements)
-        .map((contentFragmentTitle) => {
-          const modelPath = contentFragment.elements[contentFragmentTitle].model.path;
-          const featureApp = findFeatureApp(modelPath);
+      .map((contentFragmentTitle) => {
+        const modelPath = contentFragment.elements[contentFragmentTitle].model.path;
+        const featureApp = findFeatureApp(modelPath);
 
-          if (featureApp) {
-            // Set content fragment id
-            featureApp.contentFragmentId = contentFragment.elements[contentFragmentTitle].id;
-            return featureApp;
-          }
+        if (featureApp) {
+          // Set content fragment id
+          featureApp.contentFragmentId = contentFragment.elements[contentFragmentTitle].id;
+          return featureApp;
+        }
 
-          return null;
-        })
-        .filter(featureApp => featureApp !== null) as Array<FeatureApp>
+        return null;
+      })
+      .filter((featureApp) => featureApp !== null) as Array<FeatureApp>;
   }
 
   return (
@@ -65,14 +65,13 @@ async function Page({params}: PageParams) {
           // Dynamically and lazy load React Server components mapped to found feature app
           // Components without resolved content fragments will fetch content fragment data and stream UI to client
           const Element = lazy(() => import(`@/app/feature-apps/${featureApp.component}/index`));
-          return <Element key={index} featureApp={featureApp}/>
+          return <Element key={index} featureApp={featureApp} />;
         })}
       </Suspense>
     </main>
-  )
+  );
 }
 
-export default Page
+export default Page;
 
-
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
