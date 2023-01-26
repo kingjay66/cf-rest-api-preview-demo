@@ -50,7 +50,15 @@ With corresponding examples:
 
 Feature App 1 Example URL: http://localhost:3000/feature-app/6f005bec-9cde-4cd2-827d-578a3a33a514
 
-Landing Page Example URL: http://localhost:3000/page/d6ca53d5-c11b-4d66-a270-fd43c9aee899 
+Landing Page Example URL: http://localhost:3000/page/d6ca53d5-c11b-4d66-a270-fd43c9aee899
+
+## Setup Preview Button URL
+
+To define the preview button URL of a Content Fragment, go to the corresponding Content Fragment Model Properties page e.g. [Feature App 1](https://author-p98108-e908839.adobeaemcloud.com/ui#/aem/mnt/overlay/dam/cfm/models/console/content/properties.html/conf/Live-Preview-Hackathon/settings/dam/cfm/models/feature-app-1), and set the `Default Preview URL Pattern`.  
+
+Content Fragment Variables like the id can be used in the string e.g. `http://localhost:3000/feature-app/${contentFragment.id}`
+
+![preview](docs/images/preview.png) 
 
 ## Getting Started
 
